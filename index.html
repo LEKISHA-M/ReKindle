@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ReKindle Dashboard</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #0a1628; color: white; font-family: Arial; padding: 10px; }
+        h1 { color: #00e5a0; text-align: center; font-size: 1.3em; margin-bottom: 8px; }
+        .status { text-align: center; font-size: 1em; margin: 5px; padding: 8px; border-radius: 8px; }
+        .normal { background: #0d3320; color: #00e5a0; }
+        .alert { background: #3d0000; color: red; animation: blink 1s infinite; }
+        @keyframes blink { 0%{opacity:1} 50%{opacity:0.5} 100%{opacity:1} }
+        .predict-box { text-align:center; color:#00e5a0; margin:5px; font-size:0.85em; padding:8px; background:#0d2137; border-radius:8px; border:1px solid #00e5a0; }
+        .cards { display: flex; gap: 8px; justify-content: center; margin: 8px 0; flex-wrap: wrap; }
+        .card { background: #0d2137; border: 1px solid #00e5a0; border-radius: 8px; padding: 8px 12px; text-align: center; min-width: 120px; }
+        .card h2 { color: #ff6b35; font-size: 1.4em; margin: 0; }
+        .card p { color: #aaa; margin: 2px 0 0; font-size: 0.75em; }
+        .stat-card { background:#0d2137; border:1px solid #ff6b35; border-radius:8px; padding:8px 12px; text-align:center; min-width:120px; }
+        .stat-card h2 { color:#00e5a0; font-size:1.4em; margin:0; }
+        .stat-card p { color:#aaa; margin:2px 0 0; font-size:0.75em; }
+        .btn { display:block; margin:8px auto; padding:10px 30px; font-size:1em; border:none; border-radius:8px; cursor:pointer; font-weight:bold; }
+        .btn-danger { background:#cc0000; color:white; }
+        .btn-normal { background:#00e5a0; color:#0a1628; }
+    </style>
+</head>
+<body>
+    <h1>⚡ ReKindle — Smart Kitchen Energy Dashboard</h1>
+    <div id="status" class="status normal">✅ System NORMAL</div>
+    <div id="predict" class="predict-box">🤖 Loading AI Prediction...</div>
+
+    <div class="cards">
+        <div class="card"><h2 id="gas">--</h2><p>Gas Level (ppm)</p></div>
+        <div class="card"><h2 id="temp">--</h2><p>Temperature °C</p></div>
+        <div class="card"><h2 id="energy">--</h2><p>Energy Saved (kWh)</p></div>
+        <div class="card"><h2 id="biogas">--</h2><p>Biogas (L)</p></div>
+    </div>
+
+    <canvas id="chart" width="860" height="200"></canvas>
+
+    <div class="cards" style="margin-top:8px;">
+        <div class="stat-card"><h2 id="daily">--</h2><p>Daily Gas Saved (L)</p></div>
+        <div class="stat-card"><h2 id="monthly">--</h2><p>Monthly Savings (₹)</p></div>
+        <div class="stat-card"><h2 id="carbon">--</h2><p>Carbon Reduced (kg)</p></div>
+    </div>
+
+    <button id="leakBtn" class="btn btn-danger" onclick="simulateLeak()">🚨 Simulate Gas Leak</button>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let leakMode = false;
+        const ctx = document.getElementById('chart').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{ label: 'Gas Level (ppm)', data: [], borderColor: '#00e5a0', tension: 0.4, fill: false }]
+            },
+            options: {
+                scales: {
+                    y: { ticks: { color: 'white' }, grid: { color: '#333' } },
+                    x: { ticks: { color: 'white', font: { size: 9 } }, grid: { color: '#333' } }
+                },
+                plugins: { legend: { labels: { color: 'white' } } }
+            }
+        });
+
+        function simulateLeak() {
+            leakMode = !leakMode;
+            const btn = document.getElementById('leakBtn');
+            const status = document.getElementById('status');
+            if (leakMode) {
+                status.className = 'status alert';
+                status.innerText = '🚨 GAS LEAK DETECTED! DANGER! EVACUATE!';
+                btn.className = 'btn btn-normal';
+                btn.innerText = '✅ Reset to Normal';
+                document.body.style.background = '#1a0000';
+            } else {
+                status.className = 'status normal';
+                status.innerText = '✅ System NORMAL';
+                btn.className = 'btn btn-danger';
+                btn.innerText = '🚨 Simulate Gas Leak';
+                document.body.style.background = '#0a1628';
+            }
+        }
+
+        function update() {
+            fetch('http://127.0.0.1:5000/sensor')
+                .then(r => r.json())
+                .then(d => {
+                    document.getElementById('gas').innerText = d.gas_level;
+                    document.getElementById('temp').innerText = d.temperature;
+                    document.getElementById('energy').innerText = d.energy_saved;
+                    document.getElementById('biogas').innerText = d.biogas_produced;
+                    if (!leakMode) {
+                        const status = document.getElementById('status');
+                        if (d.leak_detected) {
+                            status.className = 'status alert';
+                            status.innerText = '🚨 GAS LEAK DETECTED! DANGER!';
+                            document.body.style.background = '#1a0000';
+                        } else {
+                            status.className = 'status normal';
+                            status.innerText = '✅ System NORMAL';
+                            document.body.style.background = '#0a1628';
+                        }
+                    }
+                    chart.data.labels.push(d.timestamp);
+                    chart.data.datasets[0].data.push(d.gas_level);
+                    if (chart.data.labels.length > 10) {
+                        chart.data.labels.shift();
+                        chart.data.datasets[0].data.shift();
+                    }
+                    chart.update();
+                });
+
+            fetch('http://127.0.0.1:5000/predict')
+                .then(r => r.json())
+                .then(d => {
+                    document.getElementById('predict').innerText =
+                        '🤖 AI: ' + d.risk_level + ' risk — ' + d.advice;
+                });
+
+            fetch('http://127.0.0.1:5000/stats')
+                .then(r => r.json())
+                .then(d => {
+                    document.getElementById('daily').innerText = d.daily_gas_saved;
+                    document.getElementById('monthly').innerText = d.monthly_savings;
+                    document.getElementById('carbon').innerText = d.carbon_reduced;
+                });
+        }
+        update();
+        setInterval(update, 3000);
+    </script>
+</body>
+</html>
