@@ -7,7 +7,7 @@ import random
 from datetime import datetime
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins="*", supports_credentials=True)
 
 def get_sensor_reading():
     gas_level = round(random.uniform(200, 800), 2)
