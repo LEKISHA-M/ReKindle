@@ -84,7 +84,7 @@
         }
 
         function update() {
-            fetch('http://127.0.0.1:5000/sensor')
+            fetch('https://rekindle-production-dc32.up.railway.app/sensor')
                 .then(r => r.json())
                 .then(d => {
                     document.getElementById('gas').innerText = d.gas_level;
@@ -112,14 +112,14 @@
                     chart.update();
                 });
 
-            fetch('http://127.0.0.1:5000/predict')
+            fetch('https://rekindle-production-dc32.up.railway.app/predict')
                 .then(r => r.json())
                 .then(d => {
                     document.getElementById('predict').innerText =
                         '🤖 AI: ' + d.risk_level + ' risk — ' + d.advice;
                 });
 
-            fetch('http://127.0.0.1:5000/stats')
+            fetch('https://rekindle-production-dc32.up.railway.app/stats')
                 .then(r => r.json())
                 .then(d => {
                     document.getElementById('daily').innerText = d.daily_gas_saved;
