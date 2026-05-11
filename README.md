@@ -62,3 +62,26 @@ ReKindle is a smart kitchen energy monitoring system that:
 ---
 
 ## 📁 Project Structure
+rekindle/
+├── app.py
+├── ai_predict.py
+├── simulator.py
+├── dashboard.html
+├── index.html
+├── requirements.txt
+└── Procfile.txt
+---
+
+## 🌱 Impact
+
+- Reduces kitchen gas wastage
+- Promotes biogas reuse from organic waste
+- Saves money on monthly fuel bills
+- Lowers household carbon footprint
+- Provides early warning for dangerous gas leaks
+
+---
+
+## 👨‍💻 Built for
+
+Online Hackathon 2026 — Smart Energy & Sustainability Track
