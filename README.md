@@ -1,6 +1,7 @@
 ⚡ ReKindle — Smart Kitchen Energy Dashboard
 Transforming kitchen waste gas into reusable energy — powered by AI.
 🔗 Live Demo: rekindle-two.vercel.app
+
 🌍 Problem Statement
 Every day, kitchens waste significant amounts of cooking gas through leaks, incomplete combustion, and chimney exhaust. At the same time, organic waste under the sink produces biogas that goes unused. ReKindle addresses both problems by monitoring, predicting, and helping reuse this wasted energy.
 💡 Solution
