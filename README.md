@@ -62,14 +62,16 @@ ReKindle is a smart kitchen energy monitoring system that:
 ---
 
 ## 📁 Project Structure
-rekindle/
-├── app.py
-├── ai_predict.py
-├── simulator.py
-├── dashboard.html
-├── index.html
-├── requirements.txt
-└── Procfile.txt
+
+    rekindle/
+    ├── app.py
+    ├── ai_predict.py
+    ├── simulator.py
+    ├── dashboard.html
+    ├── index.html
+    ├── requirements.txt
+    └── Procfile.txt
+    
 ---
 
 ## 🌱 Impact
