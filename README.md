@@ -1,6 +1,6 @@
 # ⚡ ReKindle — Smart Kitchen Energy Dashboard
 
-> Transforming kitchen waste gas into reusable energy — powered by AI.
+ Transforming kitchen waste gas into reusable energy — powered by AI.
 
 🔗 Live Demo: https://rekindle-two.vercel.app/dashboard.html
 
