@@ -47,6 +47,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        const API = 'https://rekindle-production-dc32.up.railway.app';
         let leakMode = false;
         const ctx = document.getElementById('chart').getContext('2d');
         const chart = new Chart(ctx, {
@@ -84,7 +85,7 @@
         }
 
         function update() {
-            fetch('http://127.0.0.1:5000/sensor')
+            fetch(API + '/sensor')
                 .then(r => r.json())
                 .then(d => {
                     document.getElementById('gas').innerText = d.gas_level;
@@ -112,14 +113,14 @@
                     chart.update();
                 });
 
-            fetch('http://127.0.0.1:5000/predict')
+            fetch(API + '/predict')
                 .then(r => r.json())
                 .then(d => {
                     document.getElementById('predict').innerText =
                         '🤖 AI: ' + d.risk_level + ' risk — ' + d.advice;
                 });
 
-            fetch('http://127.0.0.1:5000/stats')
+            fetch(API + '/stats')
                 .then(r => r.json())
                 .then(d => {
                     document.getElementById('daily').innerText = d.daily_gas_saved;
