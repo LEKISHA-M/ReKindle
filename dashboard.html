@@ -2,29 +2,107 @@
 <html>
 <head>
     <title>ReKindle Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: #0a1628; color: white; font-family: Arial; padding: 10px; }
+
         h1 { color: #00e5a0; text-align: center; font-size: 1.3em; margin-bottom: 8px; }
+
+        /* ── NAV TABS ── */
+        .tabs { display: flex; justify-content: center; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+        .tab {
+            padding: 9px 22px; border-radius: 8px; border: 1px solid #00e5a0;
+            background: #0d2137; color: #aaa; cursor: pointer; font-size: 0.9em; font-weight: bold;
+            transition: all 0.2s;
+        }
+        .tab.active { background: #00e5a0; color: #0a1628; }
+        .tab:hover:not(.active) { background: #0d2d44; color: #00e5a0; }
+
+        /* ── PAGES ── */
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* ── SHARED COMPONENTS ── */
         .status { text-align: center; font-size: 1em; margin: 5px; padding: 8px; border-radius: 8px; }
         .normal { background: #0d3320; color: #00e5a0; }
-        .alert { background: #3d0000; color: red; animation: blink 1s infinite; }
+        .alert  { background: #3d0000; color: red; animation: blink 1s infinite; }
         @keyframes blink { 0%{opacity:1} 50%{opacity:0.5} 100%{opacity:1} }
-        .predict-box { text-align:center; color:#00e5a0; margin:5px; font-size:0.85em; padding:8px; background:#0d2137; border-radius:8px; border:1px solid #00e5a0; }
-        .cards { display: flex; gap: 8px; justify-content: center; margin: 8px 0; flex-wrap: wrap; }
-        .card { background: #0d2137; border: 1px solid #00e5a0; border-radius: 8px; padding: 8px 12px; text-align: center; min-width: 120px; }
-        .card h2 { color: #ff6b35; font-size: 1.4em; margin: 0; }
-        .card p { color: #aaa; margin: 2px 0 0; font-size: 0.75em; }
-        .stat-card { background:#0d2137; border:1px solid #ff6b35; border-radius:8px; padding:8px 12px; text-align:center; min-width:120px; }
+
+        .predict-box {
+            text-align:center; color:#00e5a0; margin:5px; font-size:0.85em;
+            padding:8px; background:#0d2137; border-radius:8px; border:1px solid #00e5a0;
+        }
+
+        .cards { display:flex; gap:8px; justify-content:center; margin:8px 0; flex-wrap:wrap; }
+
+        .card { background:#0d2137; border:1px solid #00e5a0; border-radius:8px; padding:8px 12px; text-align:center; min-width:120px; flex:1; }
+        .card h2 { color:#ff6b35; font-size:1.4em; margin:0; }
+        .card p  { color:#aaa; margin:2px 0 0; font-size:0.75em; }
+
+        .stat-card { background:#0d2137; border:1px solid #ff6b35; border-radius:8px; padding:8px 12px; text-align:center; min-width:120px; flex:1; }
         .stat-card h2 { color:#00e5a0; font-size:1.4em; margin:0; }
-        .stat-card p { color:#aaa; margin:2px 0 0; font-size:0.75em; }
+        .stat-card p  { color:#aaa; margin:2px 0 0; font-size:0.75em; }
+
+        .conv-card { background:#0d2137; border:1px solid #7c4dff; border-radius:8px; padding:8px 12px; text-align:center; min-width:120px; flex:1; }
+        .conv-card h2 { color:#ff6b35; font-size:1.4em; margin:0; }
+        .conv-card p  { color:#aaa; margin:2px 0 0; font-size:0.75em; }
+
         .btn { display:block; margin:8px auto; padding:10px 30px; font-size:1em; border:none; border-radius:8px; cursor:pointer; font-weight:bold; }
-        .btn-danger { background:#cc0000; color:white; }
-        .btn-normal { background:#00e5a0; color:#0a1628; }
+        .btn-danger  { background:#cc0000; color:white; }
+        .btn-normal  { background:#00e5a0; color:#0a1628; }
+        .btn-purple  { background:#7c4dff; color:white; }
+        .btn-reset   { background:#0d2137; color:#aaa; border:1px solid #aaa; }
+
+        canvas { max-width:100%; margin-top:8px; }
+
+        /* ── FLOW DIAGRAM ── */
+        .flow { display:flex; align-items:center; justify-content:center; gap:4px; flex-wrap:wrap; margin:12px 0; }
+        .flow-box {
+            background:#0d2137; border:1px solid #00e5a0; border-radius:8px;
+            padding:8px 10px; text-align:center; min-width:80px; font-size:0.8em;
+        }
+        .flow-box.purple { border-color:#7c4dff; }
+        .flow-box.orange { border-color:#ff6b35; }
+        .flow-box.yellow { border-color:#ffd600; }
+        .flow-box span   { display:block; font-size:1.4em; }
+        .flow-box b      { color:#00e5a0; font-size:0.85em; }
+        .flow-box b.purple { color:#7c4dff; }
+        .flow-box b.orange { color:#ff6b35; }
+        .flow-arrow { color:#00e5a0; font-size:1.2em; }
+
+        /* ── EFFICIENCY BAR ── */
+        .eff-bar-wrap { background:#0d2137; border:1px solid #00e5a0; border-radius:8px; padding:10px 14px; margin:8px 0; }
+        .eff-bar-wrap p { color:#aaa; font-size:0.8em; margin-bottom:6px; display:flex; justify-content:space-between; }
+        .eff-bar-track { background:#0a1628; border-radius:6px; height:14px; overflow:hidden; }
+        .eff-bar-fill  { height:100%; border-radius:6px; background:linear-gradient(90deg,#00e5a0,#7c4dff); transition:width 1s ease; }
+
+        /* ── ANALYTICS ── */
+        .section-title { color:#00e5a0; font-size:0.85em; letter-spacing:2px; margin:12px 0 6px; text-transform:uppercase; border-bottom:1px solid #0d2137; padding-bottom:4px; }
+        .compare-row { display:flex; gap:8px; margin:8px 0; flex-wrap:wrap; }
+        .compare-box { flex:1; min-width:130px; background:#0d2137; border-radius:8px; padding:10px; border:1px solid #0d3a5a; }
+        .compare-box .label { color:#aaa; font-size:0.75em; margin-bottom:4px; }
+        .compare-box .before { color:#ff6b35; font-size:1.1em; font-weight:bold; }
+        .compare-box .after  { color:#00e5a0; font-size:1.1em; font-weight:bold; }
+        .compare-box .arrow  { color:#aaa; font-size:0.8em; margin:2px 0; }
     </style>
 </head>
 <body>
-    <h1>⚡ ReKindle — Smart Kitchen Energy Dashboard</h1>
+
+<h1>⚡ ReKindle — Smart Kitchen Energy Dashboard</h1>
+
+<!-- NAV TABS -->
+<div class="tabs">
+    <div class="tab active" onclick="showPage('page1', this)">🏠 Live Kitchen Monitor</div>
+    <div class="tab"        onclick="showPage('page2', this)">⚙️ Fuel Conversion</div>
+    <div class="tab"        onclick="showPage('page3', this)">📊 Analytics & Reports</div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     PAGE 1 — LIVE KITCHEN MONITOR
+════════════════════════════════════════════ -->
+<div id="page1" class="page active">
+
     <div id="status" class="status normal">✅ System NORMAL</div>
     <div id="predict" class="predict-box">🤖 Loading AI Prediction...</div>
 
@@ -35,7 +113,7 @@
         <div class="card"><h2 id="biogas">--</h2><p>Biogas (L)</p></div>
     </div>
 
-    <canvas id="chart" width="860" height="200"></canvas>
+    <canvas id="chart" height="200"></canvas>
 
     <div class="cards" style="margin-top:8px;">
         <div class="stat-card"><h2 id="daily">--</h2><p>Daily Gas Saved (L)</p></div>
@@ -44,92 +122,424 @@
     </div>
 
     <button id="leakBtn" class="btn btn-danger" onclick="simulateLeak()">🚨 Simulate Gas Leak</button>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        const API = 'https://rekindle-production-dc32.up.railway.app';
-        let leakMode = false;
-        const ctx = document.getElementById('chart').getContext('2d');
-        const chart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: [],
-                datasets: [{ label: 'Gas Level (ppm)', data: [], borderColor: '#00e5a0', tension: 0.4, fill: false }]
-            },
-            options: {
-                scales: {
-                    y: { ticks: { color: 'white' }, grid: { color: '#333' } },
-                    x: { ticks: { color: 'white', font: { size: 9 } }, grid: { color: '#333' } }
-                },
-                plugins: { legend: { labels: { color: 'white' } } }
+<!-- ═══════════════════════════════════════════
+     PAGE 2 — FUEL CONVERSION SYSTEM
+════════════════════════════════════════════ -->
+<div id="page2" class="page">
+
+    <div class="predict-box" style="margin-bottom:10px;">
+        ⚙️ Biogas & Chimney Gas Collection → Fuel Conversion → Stove
+    </div>
+
+    <!-- Live Flow Diagram -->
+    <div class="flow">
+        <div class="flow-box">
+            <span>🪣</span>
+            <b>BIOGAS</b>
+            <div id="f-biogas" style="color:#ff6b35;font-size:1em;font-weight:bold;">-- L</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box purple">
+            <span>📡</span>
+            <b class="purple">SENSOR</b>
+            <div style="color:#aaa;font-size:0.7em;">monitoring</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box purple">
+            <span>⚙️</span>
+            <b class="purple">CONVERTER</b>
+            <div id="f-fuel" style="color:#ff6b35;font-size:1em;font-weight:bold;">-- L/h</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box orange">
+            <span>🔥</span>
+            <b class="orange">STOVE</b>
+            <div style="color:#aaa;font-size:0.7em;">active</div>
+        </div>
+    </div>
+
+    <!-- Chimney row -->
+    <div class="flow" style="margin-top:4px;">
+        <div class="flow-box yellow">
+            <span>🏭</span>
+            <b style="color:#ffd600;">CHIMNEY</b>
+            <div id="f-chimney" style="color:#ff6b35;font-size:1em;font-weight:bold;">-- kWh</div>
+        </div>
+        <div class="flow-arrow" style="color:#ffd600;">→</div>
+        <div class="flow-box yellow" style="border-color:#ffd600;">
+            <span>♨️</span>
+            <b style="color:#ffd600;">HEAT RECOVERY</b>
+            <div style="color:#aaa;font-size:0.7em;">water heater</div>
+        </div>
+    </div>
+
+    <!-- Conversion Metrics -->
+    <div class="cards" style="margin-top:10px;">
+        <div class="conv-card"><h2 id="c-chimney">--</h2><p>Chimney Gas Collected (ppm)</p></div>
+        <div class="conv-card"><h2 id="c-biogas">--</h2><p>Biogas Collected (L)</p></div>
+        <div class="conv-card"><h2 id="c-converted">--</h2><p>Biogas → Fuel (L/hr)</p></div>
+    </div>
+
+    <div class="cards">
+        <div class="conv-card"><h2 id="c-heat">--</h2><p>Chimney Heat Recovered (kWh)</p></div>
+        <div class="conv-card"><h2 id="c-stove">--</h2><p>Fuel Sent to Stove (L)</p></div>
+        <div class="conv-card"><h2 id="c-selfgen">--%</h2><p>Total Fuel Self Generated</p></div>
+    </div>
+
+    <div class="cards">
+        <div class="stat-card"><h2 id="c-money">₹--</h2><p>Money Saved Today</p></div>
+        <div class="stat-card"><h2 id="c-co2">--</h2><p>CO₂ Captured (kg)</p></div>
+    </div>
+
+    <!-- Conversion Efficiency Bar -->
+    <div class="eff-bar-wrap">
+        <p>
+            <span>⚙️ Conversion Efficiency</span>
+            <span id="c-eff" style="color:#00e5a0;font-weight:bold;">--%</span>
+        </p>
+        <div class="eff-bar-track">
+            <div class="eff-bar-fill" id="c-eff-bar" style="width:0%"></div>
+        </div>
+    </div>
+
+    <!-- Fuel Chart -->
+    <canvas id="fuelChart" height="160"></canvas>
+
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:8px;flex-wrap:wrap;">
+        <button class="btn btn-purple" onclick="boostConversion()">⚡ Boost Conversion</button>
+        <button class="btn btn-reset"  onclick="resetConversion()">↺ Reset</button>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     PAGE 3 — ANALYTICS & REPORTS
+════════════════════════════════════════════ -->
+<div id="page3" class="page">
+
+    <div class="predict-box">📊 Weekly & Monthly Performance Overview</div>
+
+    <div class="section-title">📈 Weekly Gas Saved (Litres)</div>
+    <canvas id="weeklyChart" height="160"></canvas>
+
+    <div class="section-title">💰 Monthly Savings (₹)</div>
+    <canvas id="monthlyChart" height="160"></canvas>
+
+    <div class="section-title">🌿 Before vs After ReKindle</div>
+    <div class="compare-row">
+        <div class="compare-box">
+            <div class="label">Monthly Gas Bill</div>
+            <div class="before">₹ 1,200 <small>before</small></div>
+            <div class="arrow">↓</div>
+            <div class="after" id="a-bill">₹ -- <small>now</small></div>
+        </div>
+        <div class="compare-box">
+            <div class="label">Daily Gas Wasted</div>
+            <div class="before">45 L <small>before</small></div>
+            <div class="arrow">↓</div>
+            <div class="after" id="a-gas">-- L <small>now</small></div>
+        </div>
+        <div class="compare-box">
+            <div class="label">Carbon Footprint</div>
+            <div class="before">12 kg/day <small>before</small></div>
+            <div class="arrow">↓</div>
+            <div class="after" id="a-carbon">-- kg <small>now</small></div>
+        </div>
+    </div>
+
+    <div class="section-title">♻️ Cumulative Stats</div>
+    <div class="cards">
+        <div class="stat-card"><h2 id="a-totalgas">--</h2><p>Total Gas Saved (L)</p></div>
+        <div class="stat-card"><h2 id="a-totalmoney">₹--</h2><p>Total Money Saved</p></div>
+        <div class="stat-card"><h2 id="a-totalcarbon">--</h2><p>Total CO₂ Reduced (kg)</p></div>
+    </div>
+
+    <div class="section-title">⚡ Conversion Trend (Last 7 Days)</div>
+    <canvas id="convChart" height="160"></canvas>
+
+</div>
+
+<!-- ═══════════ SCRIPTS ═══════════ -->
+<script>
+const API = 'https://rekindle-production-dc32.up.railway.app';
+let leakMode = false;
+
+// Simulated running totals
+let totalGasSaved   = 142.5;
+let totalMoney      = 1137.2;
+let totalCarbon     = 26.8;
+let dayCount        = 0;
+
+// ── Tab navigation ──
+function showPage(id, el) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    el.classList.add('active');
+}
+
+// ── PAGE 1: Gas chart ──
+const ctx1 = document.getElementById('chart').getContext('2d');
+const gasChart = new Chart(ctx1, {
+    type: 'line',
+    data: {
+        labels: [],
+        datasets: [{ label: 'Gas Level (ppm)', data: [], borderColor: '#00e5a0', tension: 0.4, fill: false }]
+    },
+    options: {
+        scales: {
+            y: { ticks:{color:'white'}, grid:{color:'#333'} },
+            x: { ticks:{color:'white', font:{size:9}}, grid:{color:'#333'} }
+        },
+        plugins: { legend:{ labels:{color:'white'} } }
+    }
+});
+
+// ── PAGE 2: Fuel chart ──
+const ctx2 = document.getElementById('fuelChart').getContext('2d');
+const fuelChart = new Chart(ctx2, {
+    type: 'line',
+    data: {
+        labels: [],
+        datasets: [
+            { label: 'Biogas (L)',       data: [], borderColor: '#00e5a0', tension: 0.4, fill: false },
+            { label: 'Fuel Out (L/hr)',  data: [], borderColor: '#7c4dff', tension: 0.4, fill: false },
+            { label: 'Heat (kWh)',       data: [], borderColor: '#ffd600', tension: 0.4, fill: false }
+        ]
+    },
+    options: {
+        scales: {
+            y: { ticks:{color:'white'}, grid:{color:'#333'} },
+            x: { ticks:{color:'white', font:{size:9}}, grid:{color:'#333'} }
+        },
+        plugins: { legend:{ labels:{color:'white'} } }
+    }
+});
+
+// ── PAGE 3: Weekly chart ──
+const weekLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const ctx3 = document.getElementById('weeklyChart').getContext('2d');
+new Chart(ctx3, {
+    type: 'bar',
+    data: {
+        labels: weekLabels,
+        datasets: [{ label: 'Gas Saved (L)', data: [18,21,17,24,19,22,20], backgroundColor: '#00e5a0' }]
+    },
+    options: {
+        scales: {
+            y: { ticks:{color:'white'}, grid:{color:'#333'} },
+            x: { ticks:{color:'white'}, grid:{color:'#333'} }
+        },
+        plugins: { legend:{ labels:{color:'white'} } }
+    }
+});
+
+// Monthly savings chart
+const ctx4 = document.getElementById('monthlyChart').getContext('2d');
+new Chart(ctx4, {
+    type: 'line',
+    data: {
+        labels: ['Jan','Feb','Mar','Apr','May'],
+        datasets: [{ label: 'Savings (₹)', data: [95,118,134,151,163], borderColor:'#ff6b35', tension:0.4, fill:false }]
+    },
+    options: {
+        scales: {
+            y: { ticks:{color:'white'}, grid:{color:'#333'} },
+            x: { ticks:{color:'white'}, grid:{color:'#333'} }
+        },
+        plugins: { legend:{ labels:{color:'white'} } }
+    }
+});
+
+// Conversion trend chart
+const ctx5 = document.getElementById('convChart').getContext('2d');
+new Chart(ctx5, {
+    type: 'line',
+    data: {
+        labels: weekLabels,
+        datasets: [
+            { label: 'Efficiency %', data: [71,74,76,78,75,80,78], borderColor:'#7c4dff', tension:0.4, fill:false },
+            { label: 'Self Gen %',   data: [28,31,33,36,34,38,35], borderColor:'#00e5a0', tension:0.4, fill:false }
+        ]
+    },
+    options: {
+        scales: {
+            y: { ticks:{color:'white'}, grid:{color:'#333'} },
+            x: { ticks:{color:'white'}, grid:{color:'#333'} }
+        },
+        plugins: { legend:{ labels:{color:'white'} } }
+    }
+});
+
+// ── Simulate leak ──
+function simulateLeak() {
+    leakMode = !leakMode;
+    const btn    = document.getElementById('leakBtn');
+    const status = document.getElementById('status');
+    if (leakMode) {
+        status.className = 'status alert';
+        status.innerText = '🚨 GAS LEAK DETECTED! DANGER! EVACUATE!';
+        btn.className = 'btn btn-normal';
+        btn.innerText = '✅ Reset to Normal';
+        document.body.style.background = '#1a0000';
+    } else {
+        status.className = 'status normal';
+        status.innerText = '✅ System NORMAL';
+        btn.className = 'btn btn-danger';
+        btn.innerText = '🚨 Simulate Gas Leak';
+        document.body.style.background = '#0a1628';
+    }
+}
+
+// ── Boost & Reset ──
+function boostConversion() {
+    document.getElementById('c-converted').innerText = (8 + Math.random()).toFixed(2);
+    document.getElementById('c-fuel').innerText = (8 + Math.random()).toFixed(2);
+    document.getElementById('c-eff').innerText = '92%';
+    document.getElementById('c-eff-bar').style.width = '92%';
+    document.getElementById('c-selfgen').innerText = '74%';
+}
+function resetConversion() {
+    document.getElementById('c-converted').innerText = '--';
+    document.getElementById('c-fuel').innerText = '--';
+    document.getElementById('c-eff').innerText = '--%';
+    document.getElementById('c-eff-bar').style.width = '0%';
+}
+
+// ── Simulated conversion data (fallback if no API endpoint yet) ──
+function simulateConversionData(gasLevel, biogas) {
+    const chimney   = +(0.5 + Math.random() * 1.2).toFixed(2);
+    const fuel      = +(1.5 + Math.random() * 4).toFixed(2);
+    const eff       = Math.min(95, Math.round(68 + fuel * 3));
+    const stove     = +(fuel * 0.85).toFixed(2);
+    const selfgen   = Math.min(99, Math.round(fuel * 8));
+    const money     = +(fuel * 2.6).toFixed(1);
+    const co2       = +(biogas * 0.3).toFixed(2);
+
+    // Page 2 cards
+    document.getElementById('c-chimney').innerText   = gasLevel;
+    document.getElementById('c-biogas').innerText    = biogas;
+    document.getElementById('c-converted').innerText = fuel;
+    document.getElementById('c-heat').innerText      = chimney;
+    document.getElementById('c-stove').innerText     = stove;
+    document.getElementById('c-selfgen').innerText   = selfgen + '%';
+    document.getElementById('c-money').innerText     = '₹' + money;
+    document.getElementById('c-co2').innerText       = co2;
+    document.getElementById('c-eff').innerText       = eff + '%';
+    document.getElementById('c-eff-bar').style.width = eff + '%';
+
+    // Flow diagram
+    document.getElementById('f-biogas').innerText  = biogas + ' L';
+    document.getElementById('f-fuel').innerText    = fuel + ' L/h';
+    document.getElementById('f-chimney').innerText = chimney + ' kWh';
+
+    // Fuel chart
+    const now = new Date().toLocaleTimeString();
+    fuelChart.data.labels.push(now);
+    fuelChart.data.datasets[0].data.push(biogas);
+    fuelChart.data.datasets[1].data.push(fuel);
+    fuelChart.data.datasets[2].data.push(chimney);
+    if (fuelChart.data.labels.length > 10) {
+        fuelChart.data.labels.shift();
+        fuelChart.data.datasets.forEach(d => d.data.shift());
+    }
+    fuelChart.update();
+
+    // Page 3 analytics
+    totalGasSaved += 0.05;
+    totalMoney    += 0.13;
+    totalCarbon   += 0.008;
+    document.getElementById('a-totalgas').innerText   = totalGasSaved.toFixed(1);
+    document.getElementById('a-totalmoney').innerText = '₹' + totalMoney.toFixed(0);
+    document.getElementById('a-totalcarbon').innerText= totalCarbon.toFixed(1);
+
+    const bill = +(1200 - totalMoney * 0.4).toFixed(0);
+    document.getElementById('a-bill').innerHTML   = '₹ ' + Math.max(bill,400) + ' <small>now</small>';
+    document.getElementById('a-gas').innerHTML    = (45 - totalGasSaved * 0.05).toFixed(1) + ' L <small>now</small>';
+    document.getElementById('a-carbon').innerHTML = (12 - totalCarbon * 0.1).toFixed(1) + ' kg <small>now</small>';
+}
+
+// ── Main update loop ──
+function update() {
+    // Page 1 — sensor data
+    fetch(API + '/sensor')
+        .then(r => r.json())
+        .then(d => {
+            document.getElementById('gas').innerText    = d.gas_level;
+            document.getElementById('temp').innerText   = d.temperature;
+            document.getElementById('energy').innerText = d.energy_saved;
+            document.getElementById('biogas').innerText = d.biogas_produced;
+
+            if (!leakMode) {
+                const status = document.getElementById('status');
+                if (d.leak_detected) {
+                    status.className = 'status alert';
+                    status.innerText = '🚨 GAS LEAK DETECTED! DANGER!';
+                    document.body.style.background = '#1a0000';
+                } else {
+                    status.className = 'status normal';
+                    status.innerText = '✅ System NORMAL';
+                    document.body.style.background = '#0a1628';
+                }
             }
+
+            gasChart.data.labels.push(d.timestamp);
+            gasChart.data.datasets[0].data.push(d.gas_level);
+            if (gasChart.data.labels.length > 10) {
+                gasChart.data.labels.shift();
+                gasChart.data.datasets[0].data.shift();
+            }
+            gasChart.update();
+
+            // Feed conversion section with live sensor values
+            simulateConversionData(d.gas_level, d.biogas_produced);
+        })
+        .catch(() => {
+            // If API is offline, use dummy data
+            const gas    = +(400 + Math.random() * 400).toFixed(1);
+            const biogas = +(0.3 + Math.random() * 1.5).toFixed(2);
+            document.getElementById('gas').innerText    = gas;
+            document.getElementById('temp').innerText   = (28 + Math.random()).toFixed(1);
+            document.getElementById('energy').innerText = (1 + Math.random() * 0.5).toFixed(2);
+            document.getElementById('biogas').innerText = biogas;
+            gasChart.data.labels.push(new Date().toLocaleTimeString());
+            gasChart.data.datasets[0].data.push(gas);
+            if (gasChart.data.labels.length > 10) {
+                gasChart.data.labels.shift();
+                gasChart.data.datasets[0].data.shift();
+            }
+            gasChart.update();
+            simulateConversionData(gas, biogas);
         });
 
-        function simulateLeak() {
-            leakMode = !leakMode;
-            const btn = document.getElementById('leakBtn');
-            const status = document.getElementById('status');
-            if (leakMode) {
-                status.className = 'status alert';
-                status.innerText = '🚨 GAS LEAK DETECTED! DANGER! EVACUATE!';
-                btn.className = 'btn btn-normal';
-                btn.innerText = '✅ Reset to Normal';
-                document.body.style.background = '#1a0000';
-            } else {
-                status.className = 'status normal';
-                status.innerText = '✅ System NORMAL';
-                btn.className = 'btn btn-danger';
-                btn.innerText = '🚨 Simulate Gas Leak';
-                document.body.style.background = '#0a1628';
-            }
-        }
+    // Page 1 — AI prediction
+    fetch(API + '/predict')
+        .then(r => r.json())
+        .then(d => {
+            document.getElementById('predict').innerText = '🤖 AI: ' + d.risk_level + ' risk — ' + d.advice;
+        })
+        .catch(() => {
+            document.getElementById('predict').innerText = '🤖 AI: LOW risk — Off-peak hours. Normal monitoring.';
+        });
 
-        function update() {
-            fetch(API + '/sensor')
-                .then(r => r.json())
-                .then(d => {
-                    document.getElementById('gas').innerText = d.gas_level;
-                    document.getElementById('temp').innerText = d.temperature;
-                    document.getElementById('energy').innerText = d.energy_saved;
-                    document.getElementById('biogas').innerText = d.biogas_produced;
-                    if (!leakMode) {
-                        const status = document.getElementById('status');
-                        if (d.leak_detected) {
-                            status.className = 'status alert';
-                            status.innerText = '🚨 GAS LEAK DETECTED! DANGER!';
-                            document.body.style.background = '#1a0000';
-                        } else {
-                            status.className = 'status normal';
-                            status.innerText = '✅ System NORMAL';
-                            document.body.style.background = '#0a1628';
-                        }
-                    }
-                    chart.data.labels.push(d.timestamp);
-                    chart.data.datasets[0].data.push(d.gas_level);
-                    if (chart.data.labels.length > 10) {
-                        chart.data.labels.shift();
-                        chart.data.datasets[0].data.shift();
-                    }
-                    chart.update();
-                });
+    // Page 1 — stats
+    fetch(API + '/stats')
+        .then(r => r.json())
+        .then(d => {
+            document.getElementById('daily').innerText   = d.daily_gas_saved;
+            document.getElementById('monthly').innerText = d.monthly_savings;
+            document.getElementById('carbon').innerText  = d.carbon_reduced;
+        })
+        .catch(() => {
+            document.getElementById('daily').innerText   = (19 + Math.random()).toFixed(2);
+            document.getElementById('monthly').innerText = (162 + Math.random() * 2).toFixed(2);
+            document.getElementById('carbon').innerText  = (3.7 + Math.random() * 0.1).toFixed(2);
+        });
+}
 
-            fetch(API + '/predict')
-                .then(r => r.json())
-                .then(d => {
-                    document.getElementById('predict').innerText =
-                        '🤖 AI: ' + d.risk_level + ' risk — ' + d.advice;
-                });
-
-            fetch(API + '/stats')
-                .then(r => r.json())
-                .then(d => {
-                    document.getElementById('daily').innerText = d.daily_gas_saved;
-                    document.getElementById('monthly').innerText = d.monthly_savings;
-                    document.getElementById('carbon').innerText = d.carbon_reduced;
-                });
-        }
-        update();
-        setInterval(update, 3000);
-    </script>
+update();
+setInterval(update, 3000);
+</script>
 </body>
 </html>
