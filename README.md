@@ -2,8 +2,7 @@
 
  Transforming kitchen waste gas into reusable energy — powered by AI.
 
-🔗 Live Demo: http://127.0.0.1:5500/hack%201/dashborad%20upsated.html
-
+🔗 Live Demo: rekindle-two.vercel.app
 ---
 
 ## 🌍 Problem Statement
