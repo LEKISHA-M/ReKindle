@@ -2,7 +2,7 @@
 
  Transforming kitchen waste gas into reusable energy — powered by AI.
 
- live demo : rekindle-two.vercel.app
+ live demo : [rekindle-two.vercel.app](https://rekindle-two.vercel.app)
 ---
 
 ## 🌍 Problem Statement
